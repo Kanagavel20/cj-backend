@@ -14,14 +14,14 @@ const crackerSchema = new mongoose.Schema(
         type: Number,
         required: true
     },
-    discountPrice: {
-        type: Number,
-        required: true
-    },
-    discountPercentage: {
-        type: Number,
-        required: true
-    },
+    // discountPrice: {
+    //     type: Number,
+    //     required: true
+    // },
+    // discountPercentage: {
+    //     type: Number,
+    //     required: true
+    // },
     mainImage: {
         type: String,
         required: true

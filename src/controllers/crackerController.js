@@ -3,49 +3,97 @@ const Seller = require("../models/sellers");
 const { getResponse } = require("../constants/constants");
 
 
+// exports.createCracker = async (req, res) => {
+//     try {
+//         const sellerId = req.user.id;
+
+//         const seller = await Seller.findById(sellerId);
+//         if (!seller) {
+//             return getResponse(res, "Seller not found", "", "error");
+//         }
+
+//         const {
+//             crackerNameEnglish,
+//             crackerNameTamil,
+//             originalPrice,
+//             discountPrice,
+//             discountPercentage,
+//             mainImage,
+//             subImages,
+//             youtubeLink,
+//             instagramLink
+//         } = req.body;
+
+//         const cracker = await Cracker.create({
+//             crackerNameEnglish,
+//             crackerNameTamil,
+//             originalPrice,
+//             discountPrice,
+//             discountPercentage,
+//             mainImage,
+//             subImages,
+//             youtubeLink,
+//             instagramLink,
+//             createdBy: seller.name
+//         });
+
+//         return getResponse(res, "Cracker created", cracker, "success");
+
+//     } catch (error) {
+//         console.log(error);
+//         return getResponse(res, "Internal server error", "", "error");
+//     }
+// };
+
 exports.createCracker = async (req, res) => {
-    try {
-        const sellerId = req.user.id;
+  try {
+    // const sellerId = req.user.id;
 
-        const seller = await Seller.findById(sellerId);
-        if (!seller) {
-            return getResponse(res, "Seller not found", "", "error");
-        }
+    // const seller = await Seller.findById(sellerId);
+    // if (!seller) {
+    //   return getResponse(res, "Seller not found", "", "error");
+    // }
 
-        const {
-            crackerNameEnglish,
-            crackerNameTamil,
-            originalPrice,
-            discountPrice,
-            discountPercentage,
-            mainImage,
-            subImages,
-            youtubeLink,
-            instagramLink
-        } = req.body;
+    const {
+      crackerNameEnglish,
+      crackerNameTamil,
+      originalPrice,
+      offerPrice,
+      stock,
+      youtube,
+      instagram,
+      categoryId,
+      categoryNameEnglish,
+      categoryNameTamil
+    } = req.body;
 
-        const cracker = await Cracker.create({
-            crackerNameEnglish,
-            crackerNameTamil,
-            originalPrice,
-            discountPrice,
-            discountPercentage,
-            mainImage,
-            subImages,
-            youtubeLink,
-            instagramLink,
-            createdBy: seller.name
-        });
+    const mainImage = req.files?.mainImage?.[0]?.path || "";
+    const subImage = req.files?.subImage?.[0]?.path || "";
 
-        return getResponse(res, "Cracker created", cracker, "success");
+    const cracker = await Cracker.create({
+      crackerNameEnglish,
+      crackerNameTamil,
+      originalPrice,
+      offerPrice,
+      stock,
+      youtubeLink: youtube,
+      instagramLink: instagram,
+      categoryId,
+      categoryNameEnglish,
+      categoryNameTamil,
+      mainImage,
+      subImage,
+      discountPrice:100,
+      createdBy: "Kanagavel"
+    });
 
-    } catch (error) {
-        console.log(error);
-        return getResponse(res, "Internal server error", "", "error");
-    }
+    return getResponse(res, "Cracker created", cracker, "success");
+
+  } catch (error) {
+    console.log(error);
+    return getResponse(res, "Internal server error", "", "error");
+  }
 };
-
-
 exports.updateCracker = async (req, res) => {
     try {
         const sellerId = req.user.id;

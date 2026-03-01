@@ -41,13 +41,49 @@ exports.getCategories = async (req, res) => {
   try {
 
     const categories = await Category.find()
-      .select("_id categoryNameEnglish categoryNameTamil")
+      .select("_id categoryNameEnglish categoryNameTamil createdBy lastUpdatedBy createdAt updatedAt")
       .sort({ createdAt: -1 });
+
+    const formattedCategories = categories.map((cat) => {
+
+      const createdDateObj = new Date(cat.createdAt);
+      const updatedDateObj = new Date(cat.updatedAt);
+
+      const formatDate = (date) => {
+        const day = String(date.getDate()).padStart(2, "0");
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const year = date.getFullYear();
+        return `${day}/${month}/${year}`;
+      };
+
+      const formatTime = (date) => {
+        return date.toLocaleTimeString("en-IN", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: true
+        });
+      };
+
+      return {
+        _id: cat._id,
+        categoryNameEnglish: cat.categoryNameEnglish,
+        categoryNameTamil: cat.categoryNameTamil,
+        createdBy: cat.createdBy,
+        lastUpdatedBy: cat.lastUpdatedBy,
+
+        createdDate: formatDate(createdDateObj),
+        createdTime: formatTime(createdDateObj),
+
+        updatedDate: formatDate(updatedDateObj),
+        updatedTime: formatTime(updatedDateObj)
+      };
+    });
 
     return getResponse(
       res,
       "Categories fetched successfully",
-      categories,
+      formattedCategories,
       "success"
     );
 

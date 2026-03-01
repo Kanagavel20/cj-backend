@@ -16,11 +16,23 @@ router.post("/logoutSeller", verifyToken, logoutSeller);
 router.get("/verifySeller", verifyToken, verifyUser);
 
 
-router.post("/createCracker",  upload.fields([
-    { name: "mainImage", maxCount: 1 },
-    { name: "subImage", maxCount: 1 }
-]), crackerController.createCracker);
-router.put("/update/:crackerId", verifyToken, crackerController.updateCracker);
+router.post("/createCracker", verifyToken,  upload.fields([
+    { name: "image1", maxCount: 1 },
+    { name: "image2", maxCount: 1 },
+    { name: "image3", maxCount: 1 },
+    { name: "image4", maxCount: 1 },
+    { name: "image5", maxCount: 1 }
+  ]), crackerController.createCracker);
+
+router.put("/updateCracker/:crackerId", verifyToken, upload.fields([
+  { name: "image1" },
+  { name: "image2" },
+  { name: "image3" },
+  { name: "image4" },
+  { name: "image5" },
+]), crackerController?.updateCracker);
+
+router.get('/getProducts',verifyToken,crackerController.getProductList)
 
 router.post("/createCategory", verifyToken, createCategory);
 router.get("/getCategories", verifyToken, getCategories)

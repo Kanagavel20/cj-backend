@@ -32,6 +32,10 @@ const crackerSchema = new mongoose.Schema(
             required: true,
             enum: ["In Stock", "Few Left", "Out of Stock"]
         },
+         crackerType: {
+            type: String,
+            required: true,
+        },
         image1: {
             type: String,
             required: true

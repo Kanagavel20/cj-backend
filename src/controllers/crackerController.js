@@ -239,6 +239,7 @@ exports.getProductList = async (req, res) => {
         duration: cracker.duration,
         safety: cracker.safety,
         soundLevel: cracker.soundLevel,
+        crackerType:cracker.crackerType,
         instagramLink: cracker.instagramLink,
       });
     });
@@ -367,9 +368,11 @@ exports.updateCracker = async (req, res) => {
       crackerNameTamil,
       originalPrice,
       discountPrice,
+      discountPercentage,
       stockStatus,
       youtubeLink,
       instagramLink,
+      crackerType,
       duration,
       soundLevel,
       safety
@@ -378,15 +381,7 @@ exports.updateCracker = async (req, res) => {
     const original = Number(originalPrice);
     const discount = Number(discountPrice);
 
-    if (discount > original) {
-      return getResponse(res, "Discount price cannot be greater than original price", "", "error");
-    }
-
-    const discountPercentage =
-      original > 0
-        ? Math.round(((original - discount) / original) * 100)
-        : 0;
-
+  
     let image1 = existingCracker.image1;
     let image2 = existingCracker.image2;
     let image3 = existingCracker.image3;
@@ -488,6 +483,7 @@ exports.updateCracker = async (req, res) => {
         youtubeLink: youtubeLink ?? "",
         instagramLink: instagramLink ?? "",
         duration,
+        crackerType,
         soundLevel,
         safety,
         image1,
@@ -516,4 +512,79 @@ exports.updateCracker = async (req, res) => {
 
   }
 
+};
+
+
+
+exports.getCrackers = async (req, res) => {
+  try {
+
+    const lang = req.query.lang === "tamil" ? "tamil" : "english";
+
+    const crackers = await Cracker.find()
+      .populate({
+        path: "category",
+        model: "Category",
+        select: "categoryNameEnglish categoryNameTamil"
+      })
+      .lean();
+
+    const groupedData = {};
+
+    crackers.forEach((cracker) => {
+
+      if (!cracker.category) return;
+
+      const categoryId = cracker.category._id.toString();
+
+      const categoryName =
+        lang === "tamil"
+          ? cracker.category.categoryNameTamil || cracker.category.categoryNameEnglish
+          : cracker.category.categoryNameEnglish;
+
+      const crackerName =
+        lang === "tamil"
+          ? cracker.crackerNameTamil || cracker.crackerNameEnglish
+          : cracker.crackerNameEnglish;
+
+      const crackerId = cracker._id?.toString();
+
+      if (!groupedData[categoryId]) {
+        groupedData[categoryId] = {
+          name: categoryName,
+          subCategories: []
+        };
+      }
+
+      groupedData[categoryId].subCategories.push({
+        crackerId,
+        crackerName,
+        image1: cracker.image1,
+        image2: cracker.image2,
+        image3: cracker.image3,
+        image4: cracker.image4,
+        image5: cracker.image5,
+        originalPrice: cracker.originalPrice,
+        finalPrice: cracker.discountPrice,
+        discountPercentage: cracker.discountPercentage,
+        stockStatus: cracker.stockStatus,
+        disabled: cracker.stockStatus === "Out of Stock",
+        youtubeLink: cracker.youtubeLink,
+        duration: cracker.duration,
+        safety: cracker.safety,
+        soundLevel: cracker.soundLevel,
+        crackerType: cracker.crackerType,
+        instagramLink: cracker.instagramLink,
+      });
+
+    });
+
+    const productList = Object.values(groupedData);
+
+    return getResponse(res, "Product list fetched", productList, "success");
+
+  } catch (error) {
+    console.log(error);
+    return getResponse(res, "Internal server error", "", "error");
+  }
 };

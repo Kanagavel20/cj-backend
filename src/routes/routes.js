@@ -37,6 +37,8 @@ router.get('/getProducts',verifyToken,crackerController.getProductList)
 router.post("/createCategory", verifyToken, createCategory);
 router.get("/getCategories", verifyToken, getCategories)
 
+router.get("/getCrackers",crackerController?.getCrackers)
+
 
 
 module.exports = router;

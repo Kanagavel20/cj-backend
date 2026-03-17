@@ -38,6 +38,7 @@ router.post("/createCategory", verifyToken, createCategory);
 router.get("/getCategories", verifyToken, getCategories)
 
 router.get("/getCrackers",crackerController?.getCrackers)
+router.post("/genaratePdf",crackerController.generateOrderPDF)
 
 
 

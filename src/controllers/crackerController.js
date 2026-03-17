@@ -2,6 +2,10 @@ const Cracker = require("../models/cracker");
 const Seller = require("../models/sellers");
 const { getResponse } = require("../constants/constants");
 const cloudinary = require("cloudinary").v2;
+const { jsPDF } = require("jspdf");
+const { autoTable } = require("jspdf-autotable");
+const fs = require("fs");
+const path = require("path");
 
 
 
@@ -239,7 +243,7 @@ exports.getProductList = async (req, res) => {
         duration: cracker.duration,
         safety: cracker.safety,
         soundLevel: cracker.soundLevel,
-        crackerType:cracker.crackerType,
+        crackerType: cracker.crackerType,
         instagramLink: cracker.instagramLink,
       });
     });
@@ -381,7 +385,7 @@ exports.updateCracker = async (req, res) => {
     const original = Number(originalPrice);
     const discount = Number(discountPrice);
 
-  
+
     let image1 = existingCracker.image1;
     let image2 = existingCracker.image2;
     let image3 = existingCracker.image3;
@@ -588,3 +592,407 @@ exports.getCrackers = async (req, res) => {
     return getResponse(res, "Internal server error", "", "error");
   }
 };
+
+function loadTamilFont(doc) {
+  const fontPath = path.join(__dirname, "../assets/NotoSansTamil-Regular.ttf");
+
+  const font = fs.readFileSync(fontPath);
+  const fontBase64 = font.toString("base64");
+
+  doc.addFileToVFS("NotoSansTamil-Regular.ttf", fontBase64);
+  doc.addFont("NotoSansTamil-Regular.ttf", "NotoTamil", "normal");
+}
+
+exports.generateOrderPDF = async (req, res) => {
+  try {
+    const { name, phone, address, city, pincode, cart } = req.body;
+
+    const doc = new jsPDF();
+
+    /* ---------- LOAD TAMIL FONT ---------- */
+    loadTamilFont(doc);
+
+    const orderNo = "ORD-" + Date.now();
+
+    /* ---------- LOGO ---------- */
+
+    const logoPath = path.join(__dirname, "../assets/logo.jpg");
+
+    if (fs.existsSync(logoPath)) {
+      const logo = fs.readFileSync(logoPath, { encoding: "base64" });
+      const logoBase64 = `data:image/jpeg;base64,${logo}`;
+
+      doc.addImage(logoBase64, "JPEG", 10, 10, 20, 20);
+    }
+
+    /* ---------- HEADER ---------- */
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(18);
+    doc.text("CRACKER JUNCTION", 105, 18, { align: "center" });
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(12);
+    doc.text("A Syndicate by the Boys", 105, 25, { align: "center" });
+
+    /* ---------- SELLER INFO ---------- */
+
+    doc.setFontSize(10);
+
+    const sellerName = "KISHORE M";
+    const sellerMobile = "8489843508";
+
+    const labelX = 164;      // label start
+    const valueX = 178;      // value start
+    const rightEdge = 200;   // right boundary
+    const maxWidth = rightEdge - valueX;
+
+    let y = 18;
+    const lineHeight = 5;
+
+    // Seller label
+    doc.text("Seller  :", labelX, y);
+
+    // Wrap seller value
+    doc.setFont("helvetica", "bold");
+    const sellerLines = doc.splitTextToSize(sellerName, maxWidth);
+
+    doc.text(sellerLines, valueX, y);
+
+    // Move Y based on wrapped lines
+    y += sellerLines.length * lineHeight;
+
+    // Mobile
+    doc.setFont("helvetica", "normal");
+    doc.text("Mobile :", labelX, y);
+    doc.setFont("helvetica", "bold");
+    doc.text(sellerMobile, valueX, y);
+    doc.setFont("helvetica", "normal");
+
+
+    const dividerY = Math.max(35, y + 5);
+
+    doc.line(10, dividerY, 200, dividerY);
+
+    /* ---------- CUSTOMER INFO ---------- */
+
+    doc.setFontSize(11);
+
+    const startY = dividerY + 13;
+
+    doc.text("Order No    :", 10, startY);
+    doc.setFont("helvetica", "bold");
+    doc.text(orderNo, 33, startY);
+    doc.setFont("helvetica", "normal");
+
+
+    doc.text("Customer   :", 10, startY + 7);
+    doc.setFont("helvetica", "bold");
+    doc.text(name?.toUpperCase() || "-", 33, startY + 7);
+    doc.setFont("helvetica", "normal");
+
+
+    doc.text("Mobile        :", 10, startY + 14);
+    doc.setFont("helvetica", "bold");
+    doc.text(phone || "-", 33, startY + 14);
+    doc.setFont("helvetica", "normal");
+
+
+    doc.text("Address      :", 10, startY + 21);
+    doc.setFont("helvetica", "bold");
+    doc.text(`${address?.toUpperCase()}, ${city?.toUpperCase()} - ${pincode}`, 33, startY + 21);
+    doc.setFont("helvetica", "normal");
+
+
+    /* ---------- TABLE DATA ---------- */
+
+    const rows = [];
+    let total = 0;
+    let serialNo = 1;
+    Object.keys(cart).forEach((key) => {
+      const item = cart[key];
+
+      const amount = item.qty * item.price;
+      total += amount;
+
+      rows.push([
+        serialNo++,
+        item.product.crackerName, // Tamil works here
+        item.product.originalPrice,
+        item.price,
+        item.qty,
+        amount,
+      ]);
+    });
+
+    /* ---------- TABLE ---------- */
+
+    doc.setFont("NotoTamil", "normal");
+
+    autoTable(doc, {
+      startY: startY + 32,
+      margin: {
+        left: 10,
+        right: 10
+      },
+      head: [["S.No","Cracker Name", "Original Price", "Final Price", "Qty", "Amount"]],
+
+      body: rows,
+
+      foot: [
+        [
+          {
+            content: "Total Amount",
+            colSpan: 5,
+            styles: { halign: "right", fontStyle: "bold" },
+          },
+          {
+            content: total.toLocaleString('en-In'),
+            styles: { halign: "center", fontStyle: "bold" },
+          },
+        ],
+      ],
+
+      // theme: "grid",
+
+      headStyles: {
+        fillColor: [245, 73, 39],
+        textColor: 255,
+        halign: "center",
+      },
+
+      footStyles: {
+        fillColor: [255, 248, 240],
+        textColor: 0,
+      },
+
+      styles: {
+        font: "NotoTamil",
+        fontSize: 10,
+        cellPadding: 3,
+      },
+
+      columnStyles: {
+        0: { halign: "center", cellWidth: 16 }, // S.No
+        1: { cellWidth: 64 },                   // Cracker name
+        2: { halign: "center" },
+        3: { halign: "center" },
+        4: { halign: "center" },
+        5: { halign: "center" },
+      },
+    });
+
+    /* ---------- FOOTER ---------- */
+
+    const finalY = doc.lastAutoTable.finalY + 10;
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(11);
+
+    doc.text(
+      "Thank you for choosing Cracker Junction.",
+      105,
+      finalY + 15,
+      { align: "center" }
+    );
+
+    doc.text(
+      "Have a safe and happy celebration!",
+      105,
+      finalY + 22,
+      { align: "center" }
+    );
+
+    /* ---------- RETURN PDF ---------- */
+
+    const pdfBuffer = Buffer.from(doc.output("arraybuffer"));
+
+    res.set({
+      "Content-Type": "application/pdf",
+      "Content-Disposition": "attachment; filename=cracker-order.pdf",
+      "Content-Length": pdfBuffer.length,
+    });
+
+    res.send(pdfBuffer);
+  } catch (err) {
+    console.log("error", err);
+    res.status(500).json({ message: "PDF generation failed", err });
+  }
+};
+
+// exports.generateOrderPDF = async (req, res) => {
+//   try {
+//     const { name, phone, address, city, pincode, cart } = req.body;
+
+//     const doc = new jsPDF();
+
+//     const orderNo = "ORD-" + Date.now();
+//     const logoPath = path.join(__dirname, "../assets/logo.jpg");
+
+//     if (fs.existsSync(logoPath)) {
+//       const logo = fs.readFileSync(logoPath, { encoding: "base64" });
+//       const logoBase64 = `data:image/jpeg;base64,${logo}`;
+
+//       // LEFT : Logo
+//       doc.addImage(logoBase64, "JPEG", 10, 10, 20, 20);
+//     }
+
+//     /* ================= HEADER ================= */
+
+//     // CENTER : Title
+//     doc.setFont("helvetica", "bold");
+//     doc.setFontSize(18);
+//     doc.text("CRACKER JUNCTION", 105, 18, { align: "center" });
+
+//     // CENTER : Tagline
+//     doc.setFont("helvetica", "normal");
+//     doc.setFontSize(12);
+//     doc.text("A Syndicate by the Boys", 105, 25, { align: "center" });
+
+//     // RIGHT : Seller info
+//     doc.setFontSize(10);
+
+//     const sellerName = "Kanagavel skdajksd asdjkasdjk";
+//     const sellerMobile = "8489843508";
+
+//     const labelX = 150;
+//     const valueX = 200;
+//     const maxWidth = 45;
+//     let y = 18;
+//     const lineHeight = 5;
+
+//     // Seller label
+//     doc.text("Seller :", labelX, y);
+
+//     // Wrap seller name
+//     const sellerLines = doc.splitTextToSize(sellerName, maxWidth);
+
+//     doc.text(sellerLines, valueX, y, {
+//       align: "right"
+//     });
+
+//     // Move Y based on wrapped lines
+//     y += sellerLines.length * lineHeight;
+
+//     // Mobile
+//     doc.text("Mobile :", labelX, y);
+//     doc.text(sellerMobile, valueX, y, { align: "right" });
+//     // calculate divider dynamically
+//     const dividerY = Math.max(35, sellerY + (mobileLines.length * lineHeight) + 3);
+
+//     // Divider line
+//     doc.line(10, dividerY, 200, dividerY);
+
+//     doc.setFontSize(11);
+
+//     doc.text(`Order No :`, 10, 48);
+//     doc.text(orderNo, 40, 48);
+
+//     doc.text(`Customer :`, 10, 55);
+//     doc.text(name || "-", 40, 55);
+
+//     doc.text(`Mobile :`, 10, 62);
+//     doc.text(phone || "-", 40, 62);
+
+//     doc.text(`Address :`, 10, 69);
+//     doc.text(`${address}, ${city} - ${pincode}`, 40, 69);
+
+//     const rows = [];
+//     let total = 0;
+
+//     Object.keys(cart).forEach((key) => {
+//       const item = cart[key];
+
+//       const amount = item.qty * item.price;
+//       total += amount;
+
+//       rows.push([
+//         item.product.crackerName,
+//         item.product.originalPrice,
+//         item.price,
+//         item.qty,
+//         amount,
+//       ]);
+//     });
+
+//     autoTable(doc, {
+//       startY: 80,
+
+//       head: [["Cracker Name", "Original Price", "Final Price", "Qty", "Amount"]],
+
+//       body: rows,
+
+//       foot: [
+//         [
+//           { content: "Total Amount", colSpan: 4, styles: { halign: "right", fontStyle: "bold" } },
+//           { content: total.toString(), styles: { halign: "right", fontStyle: "bold" } }
+//         ]
+//       ],
+
+//       theme: "grid",
+
+//       headStyles: {
+//         fillColor: [245, 73, 39],
+//         textColor: 255,
+//         fontStyle: "bold",
+//         halign: "center",
+//       },
+
+//       footStyles: {
+//         fillColor: [255, 248, 240],
+//         textColor: 0,
+//         fontStyle: "bold",
+//       },
+
+//       styles: {
+//         fontSize: 10,
+//         cellPadding: 3,
+//       },
+
+//       columnStyles: {
+//         1: { halign: "right" },
+//         2: { halign: "right" },
+//         3: { halign: "center" },
+//         4: { halign: "right" },
+//       },
+//     });
+
+//     const finalY = doc.lastAutoTable.finalY + 10;
+
+
+//     doc.setFont("helvetica", "bold");
+//     doc.setFontSize(13);
+
+
+//     doc.setFont("helvetica", "normal");
+//     doc.setFontSize(11);
+
+//     doc.text(
+//       "Thank you for choosing Cracker Junction.",
+//       105,
+//       finalY + 15,
+//       { align: "center" }
+//     );
+
+//     doc.text(
+//       "Have a safe and happy celebration!",
+//       105,
+//       finalY + 22,
+//       { align: "center" }
+//     );
+//     /* ================= RETURN PDF ================= */
+
+//     const pdfBuffer = Buffer.from(doc.output("arraybuffer"));
+
+//     res.set({
+//       "Content-Type": "application/pdf",
+//       "Content-Disposition": "attachment; filename=cracker-order.pdf",
+//       "Content-Length": pdfBuffer.length,
+//     });
+
+//     res.send(pdfBuffer);
+//   } catch (err) {
+//     console.log("error", err)
+//     res.status(500).json({ message: "PDF generation failed", err });
+//   }
+// };

@@ -6,6 +6,8 @@ const { jsPDF } = require("jspdf");
 const { autoTable } = require("jspdf-autotable");
 const fs = require("fs");
 const path = require("path");
+const Order = require("../models/orders")
+const OrderCounter = require('../models/orderCounter')
 
 
 
@@ -603,16 +605,34 @@ function loadTamilFont(doc) {
   doc.addFont("NotoSansTamil-Regular.ttf", "NotoTamil", "normal");
 }
 
+const getNextOrderNumber = async () => {
+  const today = new Date();
+
+  const dateStr =
+    today.getFullYear() +
+    String(today.getMonth() + 1).padStart(2, "0") +
+    String(today.getDate()).padStart(2, "0");
+
+  const counter = await OrderCounter.findOneAndUpdate(
+    { date: dateStr },
+    { $inc: { seq: 1 } },
+    { new: true, upsert: true }
+  );
+
+  const seq = counter.seq.toString().padStart(3, "0");
+
+  return `ORD-CJ-${dateStr}-${seq}`;
+};
 exports.generateOrderPDF = async (req, res) => {
   try {
     const { name, phone, address, city, pincode, cart } = req.body;
-
+    // return console.log("cart",cart)
     const doc = new jsPDF();
 
     /* ---------- LOAD TAMIL FONT ---------- */
     loadTamilFont(doc);
 
-    const orderNo = "ORD-" + Date.now();
+    const orderNo = await getNextOrderNumber();
 
     /* ---------- LOGO ---------- */
 
@@ -735,7 +755,7 @@ exports.generateOrderPDF = async (req, res) => {
         left: 10,
         right: 10
       },
-      head: [["S.No","Cracker Name", "Original Price", "Final Price", "Qty", "Amount"]],
+      head: [["S.No", "Cracker Name", "Original Price", "Final Price", "Qty", "Amount"]],
 
       body: rows,
 
@@ -754,7 +774,7 @@ exports.generateOrderPDF = async (req, res) => {
       ],
 
       // theme: "grid",
-
+  showFoot: "lastPage",
       headStyles: {
         fillColor: [245, 73, 39],
         textColor: 255,
@@ -784,6 +804,8 @@ exports.generateOrderPDF = async (req, res) => {
 
     /* ---------- FOOTER ---------- */
 
+
+
     const finalY = doc.lastAutoTable.finalY + 10;
 
     doc.setFont("helvetica", "normal");
@@ -803,14 +825,53 @@ exports.generateOrderPDF = async (req, res) => {
       { align: "center" }
     );
 
+
+    const termsStartY = finalY + 35;
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(12);
+    doc.text("Terms & Conditions:", 10, termsStartY);
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+
+    const termsText = [
+      "1. Goods once sold will not be taken back or exchanged.",
+      "2. Please check the products at the time of delivery.",
+      "3. Keep away from children and use under adult supervision.",
+      "4. Follow all safety instructions mentioned on the products.",
+      "5. Seller is not responsible for any misuse of the products.",
+      "6. Delivery timelines may vary based on location and availability.",
+    ];
+
+    let currentY = termsStartY + 6;
+
+    termsText.forEach((term) => {
+      const splitText = doc.splitTextToSize(term, 190); // wrap within page width
+      doc.text(splitText, 10, currentY);
+      currentY += splitText.length * 5; // adjust spacing dynamically
+    });
+
     /* ---------- RETURN PDF ---------- */
+    await Order.create({
+      orderNo,
+      clientName: name,
+      mobileNo: phone,
+      address,
+      city,
+      pinCode: pincode,
+      overallPurchaseAmount: total,
+      deliveryStatus: false,
+    });
 
     const pdfBuffer = Buffer.from(doc.output("arraybuffer"));
 
     res.set({
       "Content-Type": "application/pdf",
-      "Content-Disposition": "attachment; filename=cracker-order.pdf",
+      "Content-Disposition": `attachment; filename=${orderNo}.pdf`,
       "Content-Length": pdfBuffer.length,
+      "X-Order-No": orderNo,
+      "Access-Control-Expose-Headers": "X-Order-No",
     });
 
     res.send(pdfBuffer);

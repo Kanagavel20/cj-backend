@@ -39,6 +39,7 @@ router.get("/getCategories", verifyToken, getCategories)
 
 router.get("/getCrackers",crackerController?.getCrackers)
 router.post("/genaratePdf",crackerController.generateOrderPDF)
+router.get("/getOrdersReport",verifyToken,crackerController.getOrders)
 
 
 

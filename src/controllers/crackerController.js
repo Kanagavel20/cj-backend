@@ -10,86 +10,6 @@ const Order = require("../models/orders")
 const OrderCounter = require('../models/orderCounter')
 
 
-
-// exports.createCracker = async (req, res) => {
-//   try {
-//     const sellerId = req.user.id;
-//     const seller = await Seller.findById(sellerId);
-
-//     if (!seller) {
-//       return getResponse(res, "Seller not found", "", "error");
-//     }
-
-//     const {
-//       category,
-//       crackerNameEnglish,
-//       crackerNameTamil,
-//       originalPrice,
-//       discountPrice,
-//       stockStatus,
-//       youtubeLink,
-//       instagramLink,
-//       duration,
-//       soundLevel,
-//       safety
-//     } = req.body;
-
-//     // Convert prices to number (important)
-//     const original = Number(originalPrice);
-//     const discount = Number(discountPrice);
-
-//     if (!req.files ||
-//       (!req.files.image1 &&
-//         !req.files.image2 &&
-//         !req.files.image3 &&
-//         !req.files.image4 &&
-//         !req.files.image5)) {
-//       return getResponse(res, "At least one image is required", "", "error");
-//     }
-//     if (discount > original) {
-//       return getResponse(res, "Discount price cannot be greater than original price", "", "error");
-//     }
-
-//     const image1 = req.files?.image1?.[0]?.path || null;
-//     const image2 = req.files?.image2?.[0]?.path || null;
-//     const image3 = req.files?.image3?.[0]?.path || null;
-//     const image4 = req.files?.image4?.[0]?.path || null;
-//     const image5 = req.files?.image5?.[0]?.path || null;
-
-//     const discountPercentage =
-//       ((original - discount) / original) * 100;
-
-//     const cracker = await Cracker.create({
-//       category,
-//       crackerNameEnglish,
-//       crackerNameTamil,
-//       originalPrice: original,
-//       discountPrice: discount,
-//       discountPercentage: Math.round(discountPercentage),
-//       stockStatus,
-//       youtubeLink: youtubeLink ?? "",
-//       instagramLink: instagramLink ?? "",
-//       duration,
-//       soundLevel,
-//       safety,
-//       image1,
-//       image2,
-//       image3,
-//       image4,
-//       image5,
-//       createdBy: seller.name,
-//       lastUpdatedBy: seller.name
-//     });
-
-//     return getResponse(res, "Cracker created successfully", cracker, "success");
-
-//   } catch (error) {
-//     console.log(error);
-//     return getResponse(res, error.message, "", "error");
-//   }
-// };
-
-
 exports.createCracker = async (req, res) => {
   try {
 
@@ -259,94 +179,6 @@ exports.getProductList = async (req, res) => {
     return getResponse(res, "Internal server error", "", "error");
   }
 };
-
-
-// exports.updateCracker = async (req, res) => {
-//   try {
-//     const sellerId = req.user.id;
-//     const { crackerId } = req.params;
-
-//     const seller = await Seller.findById(sellerId);
-//     if (!seller) {
-//       return getResponse(res, "Seller not found", "", "error");
-//     }
-
-//     const existingCracker = await Cracker.findById(crackerId);
-//     if (!existingCracker) {
-//       return getResponse(res, "Cracker not found", "", "error");
-//     }
-
-//     const {
-//       category,
-//       crackerNameEnglish,
-//       crackerNameTamil,
-//       originalPrice,
-//       discountPrice,
-//       stockStatus,
-//       youtubeLink,
-//       instagramLink,
-//       duration,
-//       soundLevel,
-//       safety,
-//     } = req.body;
-
-//     const original = Number(originalPrice);
-//     const discount = Number(discountPrice);
-
-//     if (discount > original) {
-//       return getResponse(
-//         res,
-//         "Discount price cannot be greater than original price",
-//         "",
-//         "error"
-//       );
-//     }
-
-//     const discountPercentage =
-//       original > 0
-//         ? Math.round(((original - discount) / original) * 100)
-//         : 0;
-
-//     // 🔥 Handle Images (Keep old if not replaced)
-//     const image1 = req.files?.image1?.[0]?.path || existingCracker.image1;
-//     const image2 = req.files?.image2?.[0]?.path || existingCracker.image2;
-//     const image3 = req.files?.image3?.[0]?.path || existingCracker.image3;
-//     const image4 = req.files?.image4?.[0]?.path || existingCracker.image4;
-//     const image5 = req.files?.image5?.[0]?.path || existingCracker.image5;
-
-//     const updatedCracker = await Cracker.findByIdAndUpdate(
-//       crackerId,
-//       {
-//         category,
-//         crackerNameEnglish,
-//         crackerNameTamil,
-//         originalPrice: original,
-//         discountPrice: discount,
-//         discountPercentage,
-//         stockStatus,
-//         youtubeLink: youtubeLink ?? "",
-//         instagramLink: instagramLink ?? "",
-//         duration,
-//         soundLevel,
-//         safety,
-//         image1,
-//         image2,
-//         image3,
-//         image4,
-//         image5,
-//         lastUpdatedBy: seller.name,
-//         lastUpdatedAt: new Date(),
-//       },
-//       { new: true }
-//     );
-
-//     return getResponse(res, "Cracker updated successfully", updatedCracker, "success");
-
-//   } catch (error) {
-//     console.log(error);
-//     return getResponse(res, error.message, "", "error");
-//   }
-// };
 
 
 exports.updateCracker = async (req, res) => {
@@ -881,179 +713,55 @@ exports.generateOrderPDF = async (req, res) => {
   }
 };
 
-// exports.generateOrderPDF = async (req, res) => {
-//   try {
-//     const { name, phone, address, city, pincode, cart } = req.body;
-
-//     const doc = new jsPDF();
-
-//     const orderNo = "ORD-" + Date.now();
-//     const logoPath = path.join(__dirname, "../assets/logo.jpg");
-
-//     if (fs.existsSync(logoPath)) {
-//       const logo = fs.readFileSync(logoPath, { encoding: "base64" });
-//       const logoBase64 = `data:image/jpeg;base64,${logo}`;
-
-//       // LEFT : Logo
-//       doc.addImage(logoBase64, "JPEG", 10, 10, 20, 20);
-//     }
-
-//     /* ================= HEADER ================= */
-
-//     // CENTER : Title
-//     doc.setFont("helvetica", "bold");
-//     doc.setFontSize(18);
-//     doc.text("CRACKER JUNCTION", 105, 18, { align: "center" });
-
-//     // CENTER : Tagline
-//     doc.setFont("helvetica", "normal");
-//     doc.setFontSize(12);
-//     doc.text("A Syndicate by the Boys", 105, 25, { align: "center" });
-
-//     // RIGHT : Seller info
-//     doc.setFontSize(10);
-
-//     const sellerName = "Kanagavel skdajksd asdjkasdjk";
-//     const sellerMobile = "8489843508";
-
-//     const labelX = 150;
-//     const valueX = 200;
-//     const maxWidth = 45;
-//     let y = 18;
-//     const lineHeight = 5;
-
-//     // Seller label
-//     doc.text("Seller :", labelX, y);
-
-//     // Wrap seller name
-//     const sellerLines = doc.splitTextToSize(sellerName, maxWidth);
-
-//     doc.text(sellerLines, valueX, y, {
-//       align: "right"
-//     });
-
-//     // Move Y based on wrapped lines
-//     y += sellerLines.length * lineHeight;
-
-//     // Mobile
-//     doc.text("Mobile :", labelX, y);
-//     doc.text(sellerMobile, valueX, y, { align: "right" });
-//     // calculate divider dynamically
-//     const dividerY = Math.max(35, sellerY + (mobileLines.length * lineHeight) + 3);
-
-//     // Divider line
-//     doc.line(10, dividerY, 200, dividerY);
-
-//     doc.setFontSize(11);
-
-//     doc.text(`Order No :`, 10, 48);
-//     doc.text(orderNo, 40, 48);
-
-//     doc.text(`Customer :`, 10, 55);
-//     doc.text(name || "-", 40, 55);
-
-//     doc.text(`Mobile :`, 10, 62);
-//     doc.text(phone || "-", 40, 62);
-
-//     doc.text(`Address :`, 10, 69);
-//     doc.text(`${address}, ${city} - ${pincode}`, 40, 69);
-
-//     const rows = [];
-//     let total = 0;
-
-//     Object.keys(cart).forEach((key) => {
-//       const item = cart[key];
-
-//       const amount = item.qty * item.price;
-//       total += amount;
-
-//       rows.push([
-//         item.product.crackerName,
-//         item.product.originalPrice,
-//         item.price,
-//         item.qty,
-//         amount,
-//       ]);
-//     });
-
-//     autoTable(doc, {
-//       startY: 80,
-
-//       head: [["Cracker Name", "Original Price", "Final Price", "Qty", "Amount"]],
-
-//       body: rows,
-
-//       foot: [
-//         [
-//           { content: "Total Amount", colSpan: 4, styles: { halign: "right", fontStyle: "bold" } },
-//           { content: total.toString(), styles: { halign: "right", fontStyle: "bold" } }
-//         ]
-//       ],
-
-//       theme: "grid",
-
-//       headStyles: {
-//         fillColor: [245, 73, 39],
-//         textColor: 255,
-//         fontStyle: "bold",
-//         halign: "center",
-//       },
-
-//       footStyles: {
-//         fillColor: [255, 248, 240],
-//         textColor: 0,
-//         fontStyle: "bold",
-//       },
-
-//       styles: {
-//         fontSize: 10,
-//         cellPadding: 3,
-//       },
-
-//       columnStyles: {
-//         1: { halign: "right" },
-//         2: { halign: "right" },
-//         3: { halign: "center" },
-//         4: { halign: "right" },
-//       },
-//     });
-
-//     const finalY = doc.lastAutoTable.finalY + 10;
 
 
-//     doc.setFont("helvetica", "bold");
-//     doc.setFontSize(13);
+exports.getOrders = async (req, res) => {
+  try {
+    const sellerId = req.user.id; // from token
 
+    /* ---------- STEP 1: VERIFY SELLER ---------- */
+    const sellerExists = await Seller.exists({ _id: sellerId });
 
-//     doc.setFont("helvetica", "normal");
-//     doc.setFontSize(11);
+    if (!sellerExists) {
+      return getResponse(res, "Seller not found", "", "error");
+    }
 
-//     doc.text(
-//       "Thank you for choosing Cracker Junction.",
-//       105,
-//       finalY + 15,
-//       { align: "center" }
-//     );
+    /* ---------- STEP 2: GET ALL ORDERS ---------- */
+    const orders = await Order.find()
+      .sort({ createdAt: -1 })
+      .lean();
 
-//     doc.text(
-//       "Have a safe and happy celebration!",
-//       105,
-//       finalY + 22,
-//       { align: "center" }
-//     );
-//     /* ================= RETURN PDF ================= */
+    /* ---------- STEP 3: SUMMARY ---------- */
+    let totalOrders = 0;
+    let deliveredOrders = 0;
+    let pendingOrders = 0;
+    let totalAmount = 0;
+    let deliveredAmount = 0;
 
-//     const pdfBuffer = Buffer.from(doc.output("arraybuffer"));
+    orders.forEach((order) => {
+      totalOrders++;
 
-//     res.set({
-//       "Content-Type": "application/pdf",
-//       "Content-Disposition": "attachment; filename=cracker-order.pdf",
-//       "Content-Length": pdfBuffer.length,
-//     });
+      totalAmount += order.overallPurchaseAmount || 0;
 
-//     res.send(pdfBuffer);
-//   } catch (err) {
-//     console.log("error", err)
-//     res.status(500).json({ message: "PDF generation failed", err });
-//   }
-// };
+      if (order.deliveryStatus) {
+        deliveredOrders++;
+        deliveredAmount += order.overallPurchaseAmount || 0;
+      } else {
+        pendingOrders++;
+      }
+    });
+
+    const summary = {
+      totalOrders,
+      deliveredOrders,
+      pendingOrders,
+      totalAmount,
+      deliveredAmount,
+    };
+
+    return getResponse(res,"Orders fetched successfully",{ orders, summary },"success");
+  } catch (error) {
+    console.log(error);
+    return getResponse(res, "Internal server error", "", "error");
+  }
+};

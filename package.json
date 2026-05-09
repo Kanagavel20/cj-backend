@@ -21,7 +21,9 @@
     "jspdf-autotable": "^5.0.7",
     "mongoose": "^9.1.6",
     "multer": "^2.1.0",
-    "multer-storage-cloudinary": "^4.0.0"
+    "multer-storage-cloudinary": "^4.0.0",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.11"

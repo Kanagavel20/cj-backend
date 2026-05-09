@@ -32,10 +32,10 @@ const sellerSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
-    type: {
-        type: String,
-        default: "Seller"
-    }
+    // accessType: {
+    //     type: String,
+    //     required:true,
+    // }
 }, { timestamps: true });
 
 module.exports = mongoose.model("Seller", sellerSchema)

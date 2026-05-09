@@ -33,13 +33,17 @@ const generateSellerId = async () => {
 
 exports.createSeller = async (req, res) => {
     try {
-        const { name, email, password, couponCode } = req.body;
+        const { name, email, password, accessType, couponCode } = req.body;
 
 
-        if (!name || !email || !password || !couponCode) {
+        if (!name || !email || !password || !couponCode || !accessType) {
             return getResponse(res, "All fields are required", "", "error");
         }
+        const trimmedName = name.trim();
 
+        if (!trimmedName) {
+            return getResponse(res, "Name is required", "", "error");
+        }
 
         if (name.length < 3) {
             return getResponse(res, "Name must be grater than three characters", "", "error");
@@ -82,9 +86,9 @@ exports.createSeller = async (req, res) => {
             email,
             password: hashedPassword,
             couponCode,
-            type: "Seller"
+            accessType
         });
-        console.log('sleeo', seller)
+        // console.log('sleeo', seller)
 
         return getResponse(res, "Seller created successfully", { seller }, "success");
 
@@ -94,7 +98,18 @@ exports.createSeller = async (req, res) => {
     }
 };
 
+exports.getSellers = async (req, res) => {
+  try {
+    const sellers = await Seller.find()
+      .select("-password") // ❌ hide password
+      .sort({ createdAt: -1 });
 
+    return getResponse(res, "Sellers fetched successfully", sellers, "success");
+  } catch (error) {
+    console.log("error", error);
+    return getResponse(res, "Internal server error", "", "error");
+  }
+};
 
 exports.loginSeller = async (req, res) => {
     try {
@@ -160,35 +175,35 @@ exports.logoutSeller = async (req, res) => {
 };
 
 exports.verifyUser = async (req, res) => {
-  try {
+    try {
 
-    const sellerId = req.user.id;
+        const sellerId = req.user.id;
 
-    // Get token from header
-    const authHeader = req.headers.authorization;
+        // Get token from header
+        const authHeader = req.headers.authorization;
 
-    if (!authHeader) {
-      return getResponse(res, "Token missing", "", "error");
+        if (!authHeader) {
+            return getResponse(res, "Token missing", "", "error");
+        }
+
+        const providedToken = authHeader.split(" ")[1];
+
+        // Find seller
+        const seller = await Seller.findById(sellerId);
+
+        if (!seller) {
+            return getResponse(res, "Invalid token", "", "error");
+        }
+
+        // Compare token with DB token
+        if (seller.token !== providedToken) {
+            return getResponse(res, "Invalid token", "", "error");
+        }
+
+        return getResponse(res, "Token valid", seller, "success");
+
+    } catch (error) {
+        console.log(error);
+        return getResponse(res, "Token invalid", "", "error");
     }
-
-    const providedToken = authHeader.split(" ")[1];
-
-    // Find seller
-    const seller = await Seller.findById(sellerId);
-
-    if (!seller) {
-      return getResponse(res, "Invalid token", "", "error");
-    }
-
-    // Compare token with DB token
-    if (seller.token !== providedToken) {
-      return getResponse(res, "Invalid token", "", "error");
-    }
-
-    return getResponse(res, "Token valid", seller, "success");
-
-  } catch (error) {
-    console.log(error);
-    return getResponse(res, "Token invalid", "", "error");
-  }
 };

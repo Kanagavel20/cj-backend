@@ -254,13 +254,21 @@ router.get("/getCategories", verifyToken, getCategories)
 
 /**
  * @swagger
- * /getCrackers:
+ * /api/crackers:
  *   get:
- *     tags: [Cracker]
  *     summary: Get all crackers
+ *     tags: [Crackers]
+ *     parameters:
+ *       - in: query
+ *         name: lang
+ *         schema:
+ *           type: string
+ *           enum: [english, tamil]
+ *         required: false
+ *         description: Language selection
  *     responses:
  *       200:
- *         description: Crackers returned successfully
+ *         description: Crackers fetched successfully
  */
 router.get("/getCrackers",crackerController?.getCrackers)
 

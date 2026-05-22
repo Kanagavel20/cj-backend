@@ -56,7 +56,7 @@ router.get("/", (req, res) => {
  *       201:
  *         description: Seller created successfully
  */
-router.post("/createSeller",verifyToken, createSeller);
+router.post("/createSeller", createSeller);
 
 /**
  * @swagger

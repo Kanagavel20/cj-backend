@@ -254,7 +254,7 @@ router.get("/getCategories", verifyToken, getCategories)
 
 /**
  * @swagger
- * /api/crackers:
+ * /getCrackers:
  *   get:
  *     summary: Get all crackers
  *     tags: [Crackers]

@@ -21,8 +21,8 @@ const sellerSchema = new mongoose.Schema({
     },
     couponCode: {
         type: String,
-        required: true,
-        unique: true
+        // required: true,
+        // // unique: true
     },
     token: {
         type: String,

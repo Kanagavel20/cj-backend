@@ -36,7 +36,7 @@ exports.createSeller = async (req, res) => {
         const { name, email, password, accessType, couponCode } = req.body;
 
 
-        if (!name || !email || !password || !couponCode || !accessType) {
+        if (!name || !email || !password) {
             return getResponse(res, "All fields are required", "", "error");
         }
         const trimmedName = name.trim();
@@ -85,8 +85,8 @@ exports.createSeller = async (req, res) => {
             name,
             email,
             password: hashedPassword,
-            couponCode,
-            accessType
+            // couponCode,
+            // accessType
         });
         // console.log('sleeo', seller)
 

@@ -423,7 +423,7 @@ exports.getCrackers = async (req, res) => {
 
   } catch (error) {
     console.log(error);
-    return getResponse(res, "Internal server error", "", "error");
+    return getResponse(res, error.message, "", "error");
   }
 };
 

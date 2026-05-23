@@ -11,7 +11,7 @@ const generateToken = (payload) => {
 const verifyToken = (req, res, next) => {
     try {
         const authHeader = req.headers.authorization;
-
+console.log("authHeader", authHeader);
         if (!authHeader) {
             return res.status(401).json({
                 success: false,
@@ -26,6 +26,7 @@ const verifyToken = (req, res, next) => {
 
         next();
     } catch (error) {
+        console.log("Token verification error", error.message);
         return res.status(401).json({
             success: false,
             message: "Invalid or expired token"

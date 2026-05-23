@@ -127,7 +127,8 @@ router.get("/verifySeller", verifyToken, verifyUser);
  * @swagger
  * /createCracker:
  *   post:
- *     tags: [Cracker]
+ *     tags:
+ *       - Cracker
  *     summary: Create a new cracker product
  *     security:
  *       - bearerAuth: []
@@ -137,23 +138,106 @@ router.get("/verifySeller", verifyToken, verifyUser);
  *         multipart/form-data:
  *           schema:
  *             type: object
+ *             required:
+ *               - category
+ *               - crackerNameEnglish
+ *               - crackerNameTamil
+ *               - originalPrice
+ *               - discountPrice
+ *               - stockStatus
+ *               - crackerType
+ *               - youtubeLink
+ *               - instagramLink
+ *               - duration
+ *               - soundLevel
+ *               - image1
  *             properties:
- *               name:
+ *               category:
  *                 type: string
- *               price:
+ *                 example: Bijili
+ *
+ *               crackerNameEnglish:
+ *                 type: string
+ *                 example: Lakshmi Bomb
+ *
+ *               crackerNameTamil:
+ *                 type: string
+ *                 example: லட்சுமி வெடி
+ *
+ *               originalPrice:
  *                 type: number
+ *                 example: 200
+ *
+ *               discountPrice:
+ *                 type: number
+ *                 example: 150
+ *
+ *               discountPercentage:
+ *                 type: number
+ *                 example: 25
+ *
+ *               stockStatus:
+ *                 type: string
+ *                 enum: [In Stock, Out Of Stock]
+ *                 example: In Stock
+ *
+ *               crackerType:
+ *                 type: string
+ *                 enum: [day, night]
+ *                 example: night
+ *
+ *               youtubeLink:
+ *                 type: string
+ *                 example: https://youtube.com/watch?v=12345
+ *
+ *               instagramLink:
+ *                 type: string
+ *                 example: https://instagram.com/demo
+ *
+ *               duration:
+ *                 type: string
+ *                 example: 15 seconds
+ *
+ *               soundLevel:
+ *                 type: string
+ *                 example: High
+ *
+ *               safety:
+ *                 type: string
+ *                 example: Use under adult supervision
+ *
  *               image1:
  *                 type: string
  *                 format: binary
+ *
  *               image2:
  *                 type: string
  *                 format: binary
+ *
  *               image3:
  *                 type: string
  *                 format: binary
+ *
+ *               image4:
+ *                 type: string
+ *                 format: binary
+ *
+ *               image5:
+ *                 type: string
+ *                 format: binary
+ *
  *     responses:
  *       201:
  *         description: Cracker created successfully
+ *
+ *       400:
+ *         description: Validation error
+ *
+ *       401:
+ *         description: Unauthorized
+ *
+ *       500:
+ *         description: Internal server error
  */
 router.post("/createCracker", verifyToken,  upload.fields([
     { name: "image1", maxCount: 1 },
@@ -167,28 +251,126 @@ router.post("/createCracker", verifyToken,  upload.fields([
  * @swagger
  * /updateCracker/{crackerId}:
  *   put:
- *     tags: [Cracker]
+ *     tags:
+ *       - Cracker
  *     summary: Update cracker product details
  *     security:
  *       - bearerAuth: []
+ *
  *     parameters:
  *       - in: path
  *         name: crackerId
  *         required: true
  *         schema:
  *           type: string
+ *         description: Cracker ID
+ *
  *     requestBody:
+ *       required: true
  *       content:
  *         multipart/form-data:
  *           schema:
  *             type: object
+ *             required:
+ *               - category
+ *               - crackerNameEnglish
+ *               - crackerNameTamil
+ *
  *             properties:
+ *
+ *               category:
+ *                 type: string
+ *                 example: Fancy Crackers
+ *
+ *               crackerNameEnglish:
+ *                 type: string
+ *                 example: Lakshmi Bomb
+ *
+ *               crackerNameTamil:
+ *                 type: string
+ *                 example: லட்சுமி வெடி
+ *
+ *               originalPrice:
+ *                 type: number
+ *                 example: 200
+ *
+ *               discountPrice:
+ *                 type: number
+ *                 example: 150
+ *
+ *               discountPercentage:
+ *                 type: number
+ *                 example: 25
+ *
+ *               stockStatus:
+ *                 type: string
+ *                 example: In Stock
+ *
+ *               crackerType:
+ *                 type: string
+ *                 enum: [day, night]
+ *                 example: night
+ *
+ *               youtubeLink:
+ *                 type: string
+ *                 example: https://youtube.com/watch?v=test
+ *
+ *               instagramLink:
+ *                 type: string
+ *                 example: https://instagram.com/test
+ *
+ *               duration:
+ *                 type: string
+ *                 example: 10 seconds
+ *
+ *               soundLevel:
+ *                 type: string
+ *                 example: High
+ *
+ *               safety:
+ *                 type: string
+ *                 example: Use under adult supervision
+ *
  *               image1:
  *                 type: string
  *                 format: binary
+ *
  *               image2:
  *                 type: string
  *                 format: binary
+ *
+ *               image3:
+ *                 type: string
+ *                 format: binary
+ *
+ *               image4:
+ *                 type: string
+ *                 format: binary
+ *
+ *               image5:
+ *                 type: string
+ *                 format: binary
+ *
+ *               removeImage1:
+ *                 type: boolean
+ *                 example: false
+ *
+ *               removeImage2:
+ *                 type: boolean
+ *                 example: false
+ *
+ *               removeImage3:
+ *                 type: boolean
+ *                 example: false
+ *
+ *               removeImage4:
+ *                 type: boolean
+ *                 example: false
+ *
+ *               removeImage5:
+ *                 type: boolean
+ *                 example: false
+ *
  *     responses:
  *       200:
  *         description: Cracker updated successfully
@@ -219,22 +401,43 @@ router.get('/getProducts',verifyToken,crackerController.getProductList)
  * @swagger
  * /createCategory:
  *   post:
- *     tags: [Category]
+ *     tags:
+ *       - Category
  *     summary: Create a new category
  *     security:
  *       - bearerAuth: []
+ *
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - categoryNameEnglish
+ *               - categoryNameTamil
+ *
  *             properties:
- *               name:
+ *               categoryNameEnglish:
  *                 type: string
+ *                 example: Fancy Crackers
+ *
+ *               categoryNameTamil:
+ *                 type: string
+ *                 example: பேன்சி பட்டாசுகள்
+ *
  *     responses:
  *       201:
  *         description: Category created successfully
+ *
+ *       400:
+ *         description: Validation error
+ *
+ *       401:
+ *         description: Unauthorized
+ *
+ *       500:
+ *         description: Internal server error
  */
 router.post("/createCategory", verifyToken, createCategory);
 
@@ -257,7 +460,7 @@ router.get("/getCategories", verifyToken, getCategories)
  * /getCrackers:
  *   get:
  *     summary: Get all crackers
- *     tags: [Crackers]
+ *     tags: [Cracker]
  *     parameters:
  *       - in: query
  *         name: lang

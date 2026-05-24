@@ -32,7 +32,7 @@ const crackerSchema = new mongoose.Schema(
             required: true,
             enum: ["In Stock", "Few Left", "Out of Stock"]
         },
-         crackerType: {
+        crackerType: {
             type: String,
             required: true,
         },
@@ -72,6 +72,16 @@ const crackerSchema = new mongoose.Schema(
         },
         safety: {
             type: String,
+            required: true
+        },
+        packageType: {
+            type: String,
+            enum: ["Box", "Pocket", "Piece"],
+            required: true
+        },
+
+        pieceCount: {
+            type: Number,
             required: true
         },
         createdBy: {

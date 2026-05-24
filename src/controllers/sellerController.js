@@ -36,7 +36,7 @@ exports.createSeller = async (req, res) => {
         const { name, email, password, accessType, couponCode } = req.body;
 
 
-        if (!name || !email || !password) {
+        if (!name || !email || !password || !accessType || !couponCode) {
             return getResponse(res, "All fields are required", "", "error");
         }
         const trimmedName = name.trim();
@@ -45,10 +45,15 @@ exports.createSeller = async (req, res) => {
             return getResponse(res, "Name is required", "", "error");
         }
 
-        if (name.length < 3) {
-            return getResponse(res, "Name must be grater than three characters", "", "error");
-        } else if (name.length > 40) {
-            return getResponse(res, "Name must be less than 40 characters", "", "error");
+        if (!password) {
+            return getResponse(res,"Password is required","","error");
+        }
+
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[\W_]).{10,}$/;
+
+        if (!passwordRegex.test(password)) {
+
+            return getResponse(res,"Password must contain at least 8 characters, one uppercase letter, one lowercase letter, one number, and one special character", "", "error" );
         }
 
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -57,7 +62,7 @@ exports.createSeller = async (req, res) => {
             return getResponse(res, "Invalid email format", "", "error");
         }
 
-        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[\W_]).{10,}$/;
+        
 
         if (!passwordRegex.test(password)) {
             return getResponse(res,
@@ -85,8 +90,8 @@ exports.createSeller = async (req, res) => {
             name,
             email,
             password: hashedPassword,
-            // couponCode,
-            // accessType
+            couponCode,
+            accessType
         });
         // console.log('sleeo', seller)
 
@@ -99,16 +104,16 @@ exports.createSeller = async (req, res) => {
 };
 
 exports.getSellers = async (req, res) => {
-  try {
-    const sellers = await Seller.find()
-      .select("-password") // ❌ hide password
-      .sort({ createdAt: -1 });
+    try {
+        const sellers = await Seller.find()
+            .select("-password") // ❌ hide password
+            .sort({ createdAt: -1 });
 
-    return getResponse(res, "Sellers fetched successfully", sellers, "success");
-  } catch (error) {
-    console.log("error", error);
-    return getResponse(res, "Internal server error", "", "error");
-  }
+        return getResponse(res, "Sellers fetched successfully", sellers, "success");
+    } catch (error) {
+        console.log("error", error);
+        return getResponse(res, "Internal server error", "", "error");
+    }
 };
 
 exports.loginSeller = async (req, res) => {

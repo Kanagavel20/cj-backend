@@ -22,7 +22,7 @@ exports.createCracker = async (req, res) => {
 
     const { category, crackerNameEnglish, crackerNameTamil, originalPrice,
       discountPrice, discountPercentage, stockStatus, youtubeLink, instagramLink,
-      duration, soundLevel, safety, crackerType } = req.body;
+      duration, soundLevel, safety, crackerType, packageType, pieceCount } = req.body;
 
     if (!category) {
       return getResponse(res, "Category is required", "", "error");
@@ -68,6 +68,20 @@ exports.createCracker = async (req, res) => {
       return getResponse(res, "Invalid Instagram link", "", "error");
     }
 
+    if (!packageType) {
+      return getResponse(res, "Package type is required", "", "error");
+    }
+
+    const validPackageTypes = ["Box", "Pocket", "Piece"];
+
+    if (!validPackageTypes.includes(packageType)) {
+      return getResponse(res, "Invalid package type", "", "error");
+    }
+
+    if (!pieceCount || isNaN(pieceCount) || Number(pieceCount) <= 0) {
+      return getResponse(res, "Piece count must be a valid number", "", "error");
+    }
+
     if (!duration) {
       return getResponse(res, "Duration is required", "", "error");
     }
@@ -106,6 +120,8 @@ exports.createCracker = async (req, res) => {
       image3,
       image4,
       image5,
+      packageType,
+      pieceCount,
       createdBy: seller.name,
       lastUpdatedBy: seller.name
     });
@@ -167,6 +183,8 @@ exports.getProductList = async (req, res) => {
         soundLevel: cracker.soundLevel,
         crackerType: cracker.crackerType,
         instagramLink: cracker.instagramLink,
+        packageType: cracker.packageType,
+        pieceCount: cracker.pieceCount,
       });
     });
 
@@ -213,7 +231,9 @@ exports.updateCracker = async (req, res) => {
       crackerType,
       duration,
       soundLevel,
-      safety
+      safety,
+      packageType,
+      pieceCount
     } = req.body;
 
     const original = Number(originalPrice);
@@ -322,6 +342,8 @@ exports.updateCracker = async (req, res) => {
         instagramLink: instagramLink ?? "",
         duration,
         crackerType,
+        packageType,
+        pieceCount,
         soundLevel,
         safety,
         image1,
@@ -412,6 +434,8 @@ exports.getCrackers = async (req, res) => {
         safety: cracker.safety,
         soundLevel: cracker.soundLevel,
         crackerType: cracker.crackerType,
+        packageType: cracker.packageType,
+        pieceCount: cracker.pieceCount,
         instagramLink: cracker.instagramLink,
       });
 
@@ -441,7 +465,7 @@ const getNextOrderNumber = async () => {
   const today = new Date();
 
   const dateStr =
-    today.getFullYear() +
+     String(today.getFullYear()).slice(-2) +
     String(today.getMonth() + 1).padStart(2, "0") +
     String(today.getDate()).padStart(2, "0");
 
@@ -453,7 +477,7 @@ const getNextOrderNumber = async () => {
 
   const seq = counter.seq.toString().padStart(3, "0");
 
-  return `ORD-CJ-${dateStr}-${seq}`;
+  return `CJ-${dateStr}-${seq}`;
 };
 exports.generateOrderPDF = async (req, res) => {
   try {
@@ -606,7 +630,7 @@ exports.generateOrderPDF = async (req, res) => {
       ],
 
       // theme: "grid",
-  showFoot: "lastPage",
+      showFoot: "lastPage",
       headStyles: {
         fillColor: [245, 73, 39],
         textColor: 255,
@@ -765,3 +789,275 @@ exports.getOrders = async (req, res) => {
     return getResponse(res, "Internal server error", "", "error");
   }
 };
+
+
+// exports.generateOrderPDF = async (req, res) => {
+//   try {
+//     const { name, phone, address, city, pincode, cart } = req.body;
+//     // return console.log("cart",cart)
+//     const doc = new jsPDF();
+
+//     /* ---------- LOAD TAMIL FONT ---------- */
+//     loadTamilFont(doc);
+
+//     const orderNo = await getNextOrderNumber();
+
+//     /* ---------- LOGO ---------- */
+
+//     const logoPath = path.join(__dirname, "../assets/logo.jpg");
+
+//     if (fs.existsSync(logoPath)) {
+//       const logo = fs.readFileSync(logoPath, { encoding: "base64" });
+//       const logoBase64 = `data:image/jpeg;base64,${logo}`;
+
+//       doc.addImage(logoBase64, "JPEG", 10, 10, 20, 20);
+//     }
+
+//     /* ---------- HEADER ---------- */
+
+//     doc.setFont("helvetica", "bold");
+//     doc.setFontSize(18);
+//     doc.text("CRACKER JUNCTION", 105, 18, { align: "center" });
+
+//     doc.setFont("helvetica", "normal");
+//     doc.setFontSize(12);
+//     doc.text("A Syndicate by the Boys", 105, 25, { align: "center" });
+
+//     /* ---------- SELLER INFO ---------- */
+
+//     doc.setFontSize(10);
+
+//     const sellerName = "KISHORE M";
+//     const sellerMobile = "8489843508";
+
+//     const labelX = 164;      // label start
+//     const valueX = 178;      // value start
+//     const rightEdge = 200;   // right boundary
+//     const maxWidth = rightEdge - valueX;
+
+//     let y = 18;
+//     const lineHeight = 5;
+
+//     // Seller label
+//     doc.text("Seller  :", labelX, y);
+
+//     // Wrap seller value
+//     doc.setFont("helvetica", "bold");
+//     const sellerLines = doc.splitTextToSize(sellerName, maxWidth);
+
+//     doc.text(sellerLines, valueX, y);
+
+//     // Move Y based on wrapped lines
+//     y += sellerLines.length * lineHeight;
+
+//     // Mobile
+//     doc.setFont("helvetica", "normal");
+//     doc.text("Mobile :", labelX, y);
+//     doc.setFont("helvetica", "bold");
+//     doc.text(sellerMobile, valueX, y);
+//     doc.setFont("helvetica", "normal");
+
+
+//     const dividerY = Math.max(35, y + 5);
+
+//     doc.line(10, dividerY, 200, dividerY);
+
+//     /* ---------- CUSTOMER INFO ---------- */
+
+//     doc.setFontSize(11);
+
+//     const startY = dividerY + 13;
+
+//     doc.text("Order No    :", 10, startY);
+//     doc.setFont("helvetica", "bold");
+//     doc.text(orderNo, 33, startY);
+//     doc.setFont("helvetica", "normal");
+
+
+//     doc.text("Customer   :", 10, startY + 7);
+//     doc.setFont("helvetica", "bold");
+//     doc.text(name?.toUpperCase() || "-", 33, startY + 7);
+//     doc.setFont("helvetica", "normal");
+
+
+//     doc.text("Mobile        :", 10, startY + 14);
+//     doc.setFont("helvetica", "bold");
+//     doc.text(phone || "-", 33, startY + 14);
+//     doc.setFont("helvetica", "normal");
+
+
+//     doc.text("Address      :", 10, startY + 21);
+//     doc.setFont("helvetica", "bold");
+//     doc.text(`${address?.toUpperCase()}, ${city?.toUpperCase()} - ${pincode}`, 33, startY + 21);
+//     doc.setFont("helvetica", "normal");
+
+
+//     /* ---------- TABLE DATA ---------- */
+
+//     const rows = [];
+//     let total = 0;
+//     let serialNo = 1;
+//     for (const key of Object.keys(cart)) {
+
+//       const item = cart[key];
+
+//       const crackerData = await Cracker.findById(item.crackerId);
+
+//       console.log("Cracker Data:", crackerData);
+
+//       const englishName =
+//         crackerData?.crackerNameEnglish || "-";
+
+//       const tamilName =
+//         crackerData?.crackerNameTamil || "";
+
+//       const amount = item.qty * item.price;
+
+//       total += amount;
+
+//       rows.push([
+//         serialNo++,
+
+//         `${englishName}\n(${tamilName})`,
+
+//         item.product.originalPrice,
+//         item.price,
+//         item.qty,
+//         amount,
+//       ]);
+//     }
+//     /* ---------- TABLE ---------- */
+
+//     doc.setFont("NotoTamil", "normal");
+
+//     autoTable(doc, {
+//       startY: startY + 32,
+//       margin: {
+//         left: 10,
+//         right: 10
+//       },
+//       head: [["S.No", "Cracker Name", "Original Price", "Final Price", "Qty", "Amount"]],
+
+//       body: rows,
+
+//       foot: [
+//         [
+//           {
+//             content: "Total Amount",
+//             colSpan: 5,
+//             styles: { halign: "right", fontStyle: "bold" },
+//           },
+//           {
+//             content: total.toLocaleString('en-In'),
+//             styles: { halign: "center", fontStyle: "bold" },
+//           },
+//         ],
+//       ],
+
+//       // theme: "grid",
+//       showFoot: "lastPage",
+//       headStyles: {
+//         fillColor: [245, 73, 39],
+//         textColor: 255,
+//         halign: "center",
+//       },
+
+//       footStyles: {
+//         fillColor: [255, 248, 240],
+//         textColor: 0,
+//       },
+
+//       styles: {
+//         font: "NotoTamil",
+//         fontSize: 10,
+//         cellPadding: 4,
+//         valign: "middle",
+//       },
+//       columnStyles: {
+//         0: { halign: "center", cellWidth: 16 }, // S.No
+//         1: { cellWidth: 64 },                   // Cracker name
+//         2: { halign: "center" },
+//         3: { halign: "center" },
+//         4: { halign: "center" },
+//         5: { halign: "center" },
+//       },
+//     });
+
+//     /* ---------- FOOTER ---------- */
+
+
+
+//     const finalY = doc.lastAutoTable.finalY + 10;
+
+//     doc.setFont("helvetica", "normal");
+//     doc.setFontSize(11);
+
+//     doc.text(
+//       "Thank you for choosing Cracker Junction.",
+//       105,
+//       finalY + 15,
+//       { align: "center" }
+//     );
+
+//     doc.text(
+//       "Have a safe and happy celebration!",
+//       105,
+//       finalY + 22,
+//       { align: "center" }
+//     );
+
+
+//     const termsStartY = finalY + 35;
+
+//     doc.setFont("helvetica", "bold");
+//     doc.setFontSize(12);
+//     doc.text("Terms & Conditions:", 10, termsStartY);
+
+//     doc.setFont("helvetica", "normal");
+//     doc.setFontSize(10);
+
+//     const termsText = [
+//       "1. Goods once sold will not be taken back or exchanged.",
+//       "2. Please check the products at the time of delivery.",
+//       "3. Keep away from children and use under adult supervision.",
+//       "4. Follow all safety instructions mentioned on the products.",
+//       "5. Seller is not responsible for any misuse of the products.",
+//       "6. Delivery timelines may vary based on location and availability.",
+//     ];
+
+//     let currentY = termsStartY + 6;
+
+//     termsText.forEach((term) => {
+//       const splitText = doc.splitTextToSize(term, 190); // wrap within page width
+//       doc.text(splitText, 10, currentY);
+//       currentY += splitText.length * 5; // adjust spacing dynamically
+//     });
+
+//     /* ---------- RETURN PDF ---------- */
+//     await Order.create({
+//       orderNo,
+//       clientName: name,
+//       mobileNo: phone,
+//       address,
+//       city,
+//       pinCode: pincode,
+//       overallPurchaseAmount: total,
+//       deliveryStatus: false,
+//     });
+
+//     const pdfBuffer = Buffer.from(doc.output("arraybuffer"));
+
+//     res.set({
+//       "Content-Type": "application/pdf",
+//       "Content-Disposition": `attachment; filename=${orderNo}.pdf`,
+//       "Content-Length": pdfBuffer.length,
+//       "X-Order-No": orderNo,
+//       "Access-Control-Expose-Headers": "X-Order-No",
+//     });
+
+//     res.send(pdfBuffer);
+//   } catch (err) {
+//     console.log("error", err);
+//     res.status(500).json({ message: "PDF generation failed", err });
+//   }
+// };

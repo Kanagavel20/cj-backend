@@ -21,8 +21,8 @@ const sellerSchema = new mongoose.Schema({
     },
     couponCode: {
         type: String,
-        // required: true,
-        // // unique: true
+        required: true,
+        // unique: true
     },
     token: {
         type: String,
@@ -32,10 +32,10 @@ const sellerSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
-    // accessType: {
-    //     type: String,
-    //     required:true,
-    // }
+    accessType: {
+        type: String,
+        required:true,
+    }
 }, { timestamps: true });
 
 module.exports = mongoose.model("Seller", sellerSchema)

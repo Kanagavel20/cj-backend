@@ -725,10 +725,10 @@ exports.generateOrderPDF = async (req, res) => {
       "Content-Disposition": `attachment; filename=${orderNo}.pdf`,
       "Content-Length": pdfBuffer.length,
       "X-Order-No": orderNo,
-      "Access-Control-Expose-Headers": "X-Order-No",
+       "Access-Control-Expose-Headers": "X-Order-No, X-PDF-URL",
       "X-PDF-URL": driveFile.webViewLink,
     });
-
+   console.log("Drive File:", driveFile);
     /* ---------- RETURN PDF ---------- */
     await Order.create({
       orderNo,
@@ -743,7 +743,7 @@ exports.generateOrderPDF = async (req, res) => {
       pdfUrl: driveFile.webViewLink,
     });
 
-    console.log("Drive File:", driveFile);
+ 
 
     res.send(pdfBuffer);
   } catch (err) {

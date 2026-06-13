@@ -7,7 +7,8 @@ const { autoTable } = require("jspdf-autotable");
 const fs = require("fs");
 const path = require("path");
 const Order = require("../models/orders")
-const OrderCounter = require('../models/orderCounter')
+const OrderCounter = require('../models/orderCounter');
+const { uploadPDF } = require("../utils/drive");
 
 
 exports.createCracker = async (req, res) => {
@@ -465,7 +466,7 @@ const getNextOrderNumber = async () => {
   const today = new Date();
 
   const dateStr =
-     String(today.getFullYear()).slice(-2) +
+    String(today.getFullYear()).slice(-2) +
     String(today.getMonth() + 1).padStart(2, "0") +
     String(today.getDate()).padStart(2, "0");
 
@@ -708,6 +709,26 @@ exports.generateOrderPDF = async (req, res) => {
       currentY += splitText.length * 5; // adjust spacing dynamically
     });
 
+
+
+    const pdfBuffer = Buffer.from(doc.output("arraybuffer"));
+
+
+   
+    const driveFile = await uploadPDF(
+      pdfBuffer,
+      `${orderNo}.pdf`
+    );
+
+     res.set({
+      "Content-Type": "application/pdf",
+      "Content-Disposition": `attachment; filename=${orderNo}.pdf`,
+      "Content-Length": pdfBuffer.length,
+      "X-Order-No": orderNo,
+      "Access-Control-Expose-Headers": "X-Order-No",
+      "X-PDF-URL": driveFile.webViewLink,
+    });
+
     /* ---------- RETURN PDF ---------- */
     await Order.create({
       orderNo,
@@ -718,17 +739,11 @@ exports.generateOrderPDF = async (req, res) => {
       pinCode: pincode,
       overallPurchaseAmount: total,
       deliveryStatus: false,
+      pdfFileId: driveFile.id,
+      pdfUrl: driveFile.webViewLink,
     });
 
-    const pdfBuffer = Buffer.from(doc.output("arraybuffer"));
-
-    res.set({
-      "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename=${orderNo}.pdf`,
-      "Content-Length": pdfBuffer.length,
-      "X-Order-No": orderNo,
-      "Access-Control-Expose-Headers": "X-Order-No",
-    });
+    console.log("Drive File:", driveFile);
 
     res.send(pdfBuffer);
   } catch (err) {
@@ -783,7 +798,7 @@ exports.getOrders = async (req, res) => {
       deliveredAmount,
     };
 
-    return getResponse(res,"Orders fetched successfully",{ orders, summary },"success");
+    return getResponse(res, "Orders fetched successfully", { orders, summary }, "success");
   } catch (error) {
     console.log(error);
     return getResponse(res, "Internal server error", "", "error");

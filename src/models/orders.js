@@ -12,6 +12,8 @@ const orderSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  pdfUrl: String,
+  pdfFileId: String,
 }, { timestamps: true });
 
 module.exports = mongoose.model("Order", orderSchema);

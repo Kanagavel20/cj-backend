@@ -13,9 +13,11 @@ const express = require("express")
 const router = express.Router();
 const { createSeller, loginSeller, logoutSeller, verifyUser,getSellers } = require("../controllers/sellerController")
 const crackerController = require("../controllers/crackerController");
-const { createCategory, getCategories } = require("../controllers/categroyController")
+const { createCategory, getCategories } = require("../controllers/categroyController");
+const {uploadPdf} = require("../controllers/invoiceController")
 const { verifyToken } = require("../utils/jwtToken")
 const upload = require("../middleware/upload");
+const pdfUpload = require("../middleware/pdfUpload");
 
 /**
  * @swagger
@@ -506,6 +508,12 @@ router.post("/genaratePdf",crackerController.generateOrderPDF)
  *         description: Orders report returned
  */
 router.get("/getOrdersReport",verifyToken,crackerController.getOrders)
+
+router.post(
+  "/read-pdf",
+  pdfUpload.single("pdf"),
+  uploadPdf
+);
 
 
 module.exports = router;
